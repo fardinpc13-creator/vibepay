@@ -8,7 +8,7 @@ export const V2_ADDRESS = "0xA4AaCb4F47E700Df36F73fd4288f7276cfF6f5aB" as `0x${s
 export const customVibeContract = { address: V2_ADDRESS, abi: CUSTOM_VIBE_ABI } as const;
 
 // PASTE YOUR DEPLOYED VibePayLinks ADDRESS HERE AFTER REMIX DEPLOY
-export const PAY_LINKS_ADDRESS = "0x0000000000000000000000000000000000000000" as `0x${string}`;
+export const PAY_LINKS_ADDRESS = "0x0C38827495bfbA22F6CCF855d79c27f2bC6EDA3F" as `0x${string}`;
 export const payLinksContract = { address: PAY_LINKS_ADDRESS, abi: PAY_LINKS_ABI } as const;
 
 export const BADGE_THEMES = [
