@@ -1,26 +1,24 @@
 "use client";
 import { useState } from "react";
-import { BadgesTab }      from "./BadgesTab";
 import { SendTab }        from "./SendTab";
 import { PaymentLinkTab } from "./PaymentLinkTab";
+import { BadgesTab }      from "./BadgesTab";
 import { DashboardTab }   from "./DashboardTab";
 
 const TABS = [
-  { id: "badges",  label: "BADGES",   icon: "⬡", accent: "#00f5ff" },
-  { id: "send",    label: "SEND",     icon: "→", accent: "#00ff88" },
-  { id: "link",    label: "PAY LINK", icon: "⛓", accent: "#7000ff" },
-  { id: "dash",    label: "DASHBOARD",icon: "◈", accent: "#ff00a8" },
+  { id: "send",   label: "SEND",      icon: "→", accent: "#00ff88" },
+  { id: "link",   label: "PAY LINK",  icon: "⛓", accent: "#7000ff" },
+  { id: "badges", label: "BADGES",    icon: "⬡", accent: "#00f5ff" },
+  { id: "dash",   label: "DASHBOARD", icon: "◈", accent: "#ff00a8" },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
 
 export function TabNav() {
-  const [active, setActive] = useState<TabId>("badges");
-  const tab = TABS.find(t => t.id === active)!;
+  const [active, setActive] = useState<TabId>("send");
 
   return (
     <div>
-      {/* Tab bar */}
       <div className="sticky top-[57px] z-40 bg-dark-900/90 backdrop-blur-xl border-b border-white/5">
         <div className="mx-auto max-w-7xl px-4 flex gap-0">
           {TABS.map(t => (
@@ -41,9 +39,9 @@ export function TabNav() {
       </div>
 
       <div className="min-h-[60vh]">
-        {active === "badges" && <BadgesTab />}
         {active === "send"   && <SendTab />}
         {active === "link"   && <PaymentLinkTab />}
+        {active === "badges" && <BadgesTab />}
         {active === "dash"   && <DashboardTab />}
       </div>
     </div>
