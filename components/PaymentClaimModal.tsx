@@ -29,107 +29,121 @@ export function PaymentClaimModal({ linkId, onClose }: { linkId: string; onClose
   useEffect(() => { if (isSuccess) { setStep("success"); refetch(); } }, [isSuccess]);
   useEffect(() => { if (error) setStep("error"); }, [error]);
 
-  const creator   = link ? (link[0] as string) : "";
-  const amountWei = link ? (link[1] as bigint) : 0n;
-  const note      = link ? (link[2] as string) : "";
-  const claimed   = link ? (link[3] as boolean) : false;
+  const creator = link ? (link[0] as string) : "";
+  const wei = link ? (link[1] as bigint) : BigInt(0);
+  const note = link ? (link[2] as string) : "";
+  const claimed = link ? (link[3] as boolean) : false;
   const cancelled = link ? (link[4] as boolean) : false;
 
-  const exists    = creator && creator !== "0x0000000000000000000000000000000000000000";
-  const amount    = amountWei ? parseFloat(formatEther(amountWei)).toFixed(4) : "0";
-  const busy      = step === "signing" || step === "pending";
-  const claimable = exists && !claimed && !cancelled;
-  const isCreator = address?.toLowerCase() === creator?.toLowerCase();
+  const exists = creator && creator !== "0x0000000000000000000000000000000000000000";
+  const amount = wei ? parseFloat(formatEther(wei)).toFixed(2) : "0";
+  const busy = step === "signing" || step === "pending";
 
-  function handleClaim() {
+  function claim() {
     reset(); setStep("idle");
     writeContract({ ...payLinksContract, functionName: "claim", args: [linkId as `0x${string}`] });
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(3,3,10,0.92)" }}>
-      <div className="w-full max-w-md gradient-border">
-        <div className="relative z-10 p-6 holo-shimmer rounded-xl">
-          <button onClick={onClose}
-            className="absolute top-4 right-4 text-white/30 hover:text-white font-mono text-xs">✕</button>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: "rgba(10,11,15,0.85)" }}
+    >
+      <div className="card w-full max-w-sm p-6 relative">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 text-xl leading-none"
+          style={{ color: "var(--text-mute)" }}
+          aria-label="Close"
+        >
+          ×
+        </button>
 
-          <p className="font-mono text-xs tracking-[0.3em] text-neon-violet mb-4">◈ CLAIM USDC ◈</p>
-
-          {isLoading ? (
-            <p className="font-rajdhani text-white/40 py-8 text-center">Loading link…</p>
-          ) : !exists ? (
-            <div className="py-6 text-center">
-              <p className="font-orbitron text-lg text-white/60 mb-2">LINK NOT FOUND</p>
-              <p className="font-rajdhani text-white/40 text-sm">This payment link doesn't exist on Arc.</p>
-              <button onClick={onClose} className="btn-cyber btn-cyan w-full py-3 text-sm mt-4">Close</button>
+        {isLoading ? (
+          <p className="py-10 text-center" style={{ color: "var(--text-dim)" }}>Loading…</p>
+        ) : !exists ? (
+          <div className="py-6 text-center">
+            <h2 className="text-xl font-bold mb-2">Link not found</h2>
+            <p className="text-sm mb-6" style={{ color: "var(--text-dim)" }}>
+              This payment link doesn&apos;t exist or was never created.
+            </p>
+            <button onClick={onClose} className="btn btn-ghost">Close</button>
+          </div>
+        ) : step === "success" ? (
+          <div className="py-4 text-center">
+            <div
+              className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full text-3xl"
+              style={{ background: "rgba(0,217,192,0.12)", color: "var(--accent)" }}
+            >
+              ✓
             </div>
-          ) : step === "success" ? (
-            <div className="py-4 text-center">
-              <div className="mx-auto h-20 w-20 rounded-full flex items-center justify-center mb-4"
-                style={{ border: "2px solid #00ff88", boxShadow: "0 0 30px #00ff8850", background: "#00ff8808" }}>
-                <span className="text-3xl">✓</span>
-              </div>
-              <p className="font-orbitron text-2xl font-black neon-text-green mb-1">CLAIMED!</p>
-              <p className="font-mono text-sm text-white/50 mb-4">{amount} USDC is now in your wallet</p>
-              <a href={`${arcTestnet.blockExplorers.default.url}/tx/${txHash}`}
+            <h2 className="text-2xl font-bold mb-1">{amount} USDC received</h2>
+            <p className="text-sm mb-6" style={{ color: "var(--text-dim)" }}>It&apos;s in your wallet now</p>
+            <div className="flex flex-col gap-3">
+              <button onClick={onClose} className="btn btn-primary">Done</button>
+              <a
+                href={`${arcTestnet.blockExplorers.default.url}/tx/${txHash}`}
                 target="_blank" rel="noopener noreferrer"
-                className="font-mono text-[11px] text-neon-cyan underline">View on ArcScan →</a>
-              <button onClick={onClose} className="btn-cyber btn-green w-full py-3 text-sm mt-4">Done</button>
+                className="btn btn-ghost"
+              >
+                View receipt
+              </a>
             </div>
-          ) : (
-            <>
-              <h2 className="font-orbitron text-4xl font-black neon-text-cyan mb-1">{amount} USDC</h2>
-              {note && <p className="font-rajdhani text-white/50 mb-4">&ldquo;{note}&rdquo;</p>}
-              <p className="font-mono text-[10px] text-white/25 mb-5">
-                FROM {creator.slice(0,10)}…{creator.slice(-6)}
-              </p>
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-sm mb-2" style={{ color: "var(--text-dim)" }}>Someone sent you</p>
+            <h2 className="text-4xl font-bold tracking-tight mb-2">
+              {amount} <span className="text-xl" style={{ color: "var(--text-dim)" }}>USDC</span>
+            </h2>
+            {note && <p className="mb-4" style={{ color: "var(--text-dim)" }}>&ldquo;{note}&rdquo;</p>}
+            <p className="text-sm mb-6" style={{ color: "var(--text-mute)", fontFamily: "ui-monospace, monospace" }}>
+              From {creator.slice(0, 6)}…{creator.slice(-4)}
+            </p>
 
-              {claimed ? (
-                <div className="p-4 rounded-sm text-center" style={{ background: "#ffffff05", border: "1px solid #ffffff15" }}>
-                  <p className="font-orbitron text-sm text-white/50">ALREADY CLAIMED</p>
-                  <p className="font-rajdhani text-white/30 text-sm mt-1">Someone got here first.</p>
-                </div>
-              ) : cancelled ? (
-                <div className="p-4 rounded-sm text-center" style={{ background: "#ffffff05", border: "1px solid #ffffff15" }}>
-                  <p className="font-orbitron text-sm text-white/50">LINK CANCELLED</p>
-                  <p className="font-rajdhani text-white/30 text-sm mt-1">The sender refunded this link.</p>
-                </div>
-              ) : !isConnected ? (
-                <div className="flex flex-col items-center gap-3">
-                  <p className="font-rajdhani text-white/40 text-sm">Connect your wallet to claim</p>
-                  <ConnectButton />
-                </div>
-              ) : wrongChain ? (
-                <button onClick={() => switchChain({ chainId: arcTestnet.id })}
-                  className="btn-cyber btn-cyan w-full py-4 text-sm">Switch to Arc</button>
-              ) : (
-                <>
-                  <button onClick={handleClaim} disabled={busy}
-                    className="btn-cyber btn-green w-full py-4 text-sm disabled:opacity-50">
-                    {step === "signing" ? "CONFIRM IN WALLET…" :
-                     step === "pending" ? "CLAIMING…" :
-                     step === "error"   ? "RETRY CLAIM" : `CLAIM ${amount} USDC →`}
-                  </button>
-                  {isCreator && (
-                    <p className="font-mono text-[9px] text-yellow-400/60 text-center mt-2">
-                      This is your own link — claiming returns the funds to you.
-                    </p>
-                  )}
-                  {step === "error" && (
-                    <p className="font-mono text-[10px] text-red-400 mt-3 text-center">
-                      {error?.message?.includes("rejected") ? "Rejected in wallet."
-                        : error?.message?.includes("Already claimed") ? "This link was just claimed by someone else."
-                        : "Claim failed. Try again."}
-                    </p>
-                  )}
-                  <p className="font-mono text-[9px] text-white/15 text-center mt-3">
-                    Gas paid in USDC · Arc Testnet
+            {claimed ? (
+              <div className="card p-4" style={{ background: "var(--surface-2)" }}>
+                <p className="font-semibold mb-1">Already claimed</p>
+                <p className="text-sm" style={{ color: "var(--text-dim)" }}>Someone got here first.</p>
+              </div>
+            ) : cancelled ? (
+              <div className="card p-4" style={{ background: "var(--surface-2)" }}>
+                <p className="font-semibold mb-1">Link cancelled</p>
+                <p className="text-sm" style={{ color: "var(--text-dim)" }}>The sender took the money back.</p>
+              </div>
+            ) : !isConnected ? (
+              <div>
+                <p className="text-sm mb-4" style={{ color: "var(--text-dim)" }}>
+                  Connect a wallet to claim it
+                </p>
+                <div className="flex justify-center"><ConnectButton /></div>
+              </div>
+            ) : wrongChain ? (
+              <button onClick={() => switchChain({ chainId: arcTestnet.id })} className="btn btn-primary">
+                Switch to Arc
+              </button>
+            ) : (
+              <>
+                <button onClick={claim} disabled={busy} className="btn btn-primary">
+                  {busy && <span className="spinner" />}
+                  {step === "signing" ? "Check your wallet" : step === "pending" ? "Claiming…" : step === "error" ? "Try again" : `Claim ${amount} USDC`}
+                </button>
+                {step === "error" && (
+                  <p className="mt-3 text-sm" style={{ color: "var(--danger)" }}>
+                    {error?.message?.includes("rejected")
+                      ? "You cancelled it in your wallet."
+                      : error?.message?.includes("Already claimed")
+                      ? "Someone just claimed this."
+                      : "Couldn't claim. Try again."}
                   </p>
-                </>
-              )}
-            </>
-          )}
-        </div>
+                )}
+                <p className="mt-4 text-sm" style={{ color: "var(--text-mute)" }}>
+                  Network fee is paid in USDC
+                </p>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
